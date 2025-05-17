@@ -6,4 +6,7 @@ Seeed Xiao esp32s3         |  Adafruit MCP9808
 
 MCP9808.py and umail.py need to be downloaded to the esp32s3 running the latest micropython. esp32s3_mcp9808_temp_csv_email_and_webpage.py needs to be modified to have your wifi and gmail details, and then it is downloaded to the esp32s3 with the name "main.py" (so that it runs automatically). Connect to the unit by using your PC's web browser (remember that the micropython web server is only http, not https). Feel free to change the logging interval (it is presently set for every 30min). If you just want to access the logfile with the web server, feel free to remove the "sendEmail" code.
 
+![picture](https://github.com/charkster/esp32s3_mcp9808_temp_csv_email_and_webpage/blob/main/images/web_server_page.png)
 
+The CSV log file has columns which indicate when the temperature was sampled. The date is stored in the final column. If you adjust the measure interval, the CSV header will adapt to the change.
+![picture](https://github.com/charkster/esp32s3_mcp9808_temp_csv_email_and_webpage/blob/main/images/temp_data_csv.png)
