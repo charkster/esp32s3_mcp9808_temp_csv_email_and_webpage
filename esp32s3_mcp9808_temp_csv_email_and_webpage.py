@@ -53,10 +53,10 @@ def sendEmail(CSV_FILE):
     smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)
     # Email details
     sender_email = 'YOUR_GMAIL_HERE@gmail.com'
-    sender_name = 'esp32c3 email'
+    sender_name = 'esp32s3 email'
     sender_app_password = 'YOUR_PASSWORD'
     recipient_email ='YOUR_EMAIL@gmail.com'
-    email_subject ='Monthly automated ESP32C3 Temperature CSV file'
+    email_subject ='Monthly automated ESP32S3 Temperature CSV file'
     smtp.login(sender_email, sender_app_password)
     smtp.to(recipient_email)
     smtp.write("From:" + sender_name + "<"+ sender_email+">\n")
@@ -69,7 +69,7 @@ def sendEmail(CSV_FILE):
     smtp.write("Content-Disposition: inline\n\n")
     t = time.localtime()
     date = str("{:2d}/{:2d}/{:4d} {:2d}:{:02d}:{:02d}".format(t[1],t[2],t[0],t[3],t[4],t[5]))
-    smtp.write("ESP32C3 Temperature logfile is attached\n")
+    smtp.write("ESP32S3 Temperature logfile is attached\n")
     smtp.write("Present time is " + date + '\n\n')
     smtp.write("--" + uuidgen + '\n') # boundary
     smtp.write('Content-Type: text/csv; name=' + CSV_FILE + '\n')
