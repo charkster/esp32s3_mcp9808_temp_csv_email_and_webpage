@@ -1,4 +1,4 @@
-Micropython script for esp32s3 and mcp9808 to log temperature to a csv file and email it as an attachment. Web server also included to get a live copy of the temperature log file.
+Micropython script for esp32s3 and mcp9808 to log temperature to a csv file and email it as an attachment. Web server also included to get a live copy of the temperature log file. NTP time is synchronized daily.
 
 Seeed Xiao esp32s3         |  Adafruit MCP9808
 :-------------------------:|:-------------------------:
