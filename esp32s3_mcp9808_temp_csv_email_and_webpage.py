@@ -140,6 +140,10 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
         else:
             f.write("{:.2f},".format(temp))
         f.close()
+        # if wifi is down do one attempt to connect
+        wlan = network.WLAN(network.STA_IF)
+        if (wlan.status() != 1010):
+            connect_to_wifi()
         if (n < (remaining_meas - 1)): # last iteration skip wait time as we will align to midnight
             time.sleep(meas_interval*60)
 
@@ -164,6 +168,10 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
             else:
                 f.write("{:.2f},".format(temp))
             f.close()
+            # if wifi is down do one attempt to connect
+            wlan = network.WLAN(network.STA_IF)
+            if (wlan.status() != 1010):
+                connect_to_wifi()
             if (n < (total_meas - 1)): # last iteration skip wait time as we will align to midnight
                 time.sleep(meas_interval*60)
 
