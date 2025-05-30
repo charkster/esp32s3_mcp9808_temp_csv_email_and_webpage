@@ -9,82 +9,6 @@ import MCP9808 # this needs to be a file saved on esp32s3
 import umail   # this needs to be a file saved on esp32s3
 import os
 
-def connect_to_wifi():
-    # Your network credentials
-    ssid = 'YOUR_SSID'
-    password = 'YOUR_PASSWORD'
-    #Connect to Wi-Fi
-    wlan = network.WLAN(network.STA_IF)
-    wlan.ifconfig(('192.168.0.201', '255.255.255.0', '192.168.0.1', '205.171.3.25')) # put your static IP here
-    time.sleep_ms(1000)
-    wlan.active(True)
-    time.sleep_ms(1000)
-    wlan.connect(ssid, password)
-
-    # Wait for connection to establish
-    max_wait = 10
-    while max_wait > 0:
-        if wlan.status() == 1010:
-                break
-        max_wait -= 1
-        print('waiting for connection...')
-        time.sleep(1)
-    
-    # Manage connection errors
-    if wlan.status() == 1010:
-        print('connected')
-        ntptime.timeout = 5
-        try:
-            ntptime.settime() # this is GMT
-        except:
-            ntptime.settime() # try again
-        rtc = machine.RTC()
-        utc_shift = -7 # Phoenix Arizona
-        tm = utime.localtime(utime.mktime(utime.localtime()) + utc_shift*3600)
-        tm = tm[0:3] + (0,) + tm[3:6] + (0,)
-        rtc.datetime(tm)
-        return True
-    else:
-        print(wlan.status())
-        return False
-
-def sendEmail(CSV_FILE):
-    #initialize SMTP server and login
-    smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)
-    # Email details
-    sender_email = 'YOUR_GMAIL_HERE@gmail.com'
-    sender_name = 'esp32s3 email'
-    sender_app_password = 'YOUR_PASSWORD'
-    recipient_email ='YOUR_EMAIL@gmail.com'
-    email_subject ='Monthly automated ESP32S3 Temperature CSV file'
-    smtp.login(sender_email, sender_app_password)
-    smtp.to(recipient_email)
-    smtp.write("From:" + sender_name + "<"+ sender_email+">\n")
-    smtp.write("Subject:" + email_subject + "\n")
-    uuidgen = "ddb8f663-bfcd-49d6-ae3f-ade84587f9d0"
-    smtp.write("MIME-Version: 1.0\n")
-    smtp.write("Content-Type: multipart/mixed; boundary=" + uuidgen + '\n\n')
-    smtp.write("--" + uuidgen + '\n') # boundary
-    smtp.write("Content-Type: text/plain; charset=UTF-8\n")
-    smtp.write("Content-Disposition: inline\n\n")
-    t = time.localtime()
-    date = str("{:2d}/{:2d}/{:4d} {:2d}:{:02d}:{:02d}".format(t[1],t[2],t[0],t[3],t[4],t[5]))
-    smtp.write("ESP32S3 Temperature logfile is attached\n")
-    smtp.write("Present time is " + date + '\n\n')
-    smtp.write("--" + uuidgen + '\n') # boundary
-    smtp.write('Content-Type: text/csv; name=' + CSV_FILE + '\n')
-    smtp.write('Content-Disposition: attachment; filename=' + CSV_FILE + '\n\n')
-    content = ''
-    try:
-        with open(CSV_FILE, 'r') as infile:
-            content = infile.read()
-    except OSError:
-        pass
-    smtp.write(content)
-    smtp.write('\n')
-    smtp.send()
-    smtp.quit()
-
 def file_exists(filename):
     try:
         os.stat(filename)
@@ -142,7 +66,7 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
         f.close()
         # if wifi is down do one attempt to connect
         wlan = network.WLAN(network.STA_IF)
-        if (wlan.status() != 1010):
+        if not wlan.isconnected():
             connect_to_wifi()
         if (n < (remaining_meas - 1)): # last iteration skip wait time as we will align to midnight
             time.sleep(meas_interval*60)
@@ -170,7 +94,7 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
             f.close()
             # if wifi is down do one attempt to connect
             wlan = network.WLAN(network.STA_IF)
-            if (wlan.status() != 1010):
+            if not wlan.isconnected():
                 connect_to_wifi()
             if (n < (total_meas - 1)): # last iteration skip wait time as we will align to midnight
                 time.sleep(meas_interval*60)
@@ -186,8 +110,8 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
 
 def connect_to_wifi():
     # Your network credentials
-    ssid = '0024A515BC7F'
-    password = 'x3p08mh52h257'
+    ssid = 'YOUR_SSID'
+    password = 'YOUR_PASSWORD'
     #Connect to Wi-Fi
     wlan = network.WLAN(network.STA_IF)
     wlan.ifconfig(('192.168.0.201', '255.255.255.0', '192.168.0.1', '205.171.3.25')) # put your static IP here
@@ -199,14 +123,14 @@ def connect_to_wifi():
     # Wait for connection to establish
     max_wait = 10
     while max_wait > 0:
-        if wlan.status() == 1010:
-                break
+        if wlan.isconnected():
+            break
         max_wait -= 1
         print('waiting for connection...')
         time.sleep(1)
     
-    # Manage connection errors
-    if wlan.status() == 1010:
+    # Manage connection error
+    if wlan.isconnected():
         print('connected')
         ntptime.timeout = 5
         try:
@@ -247,18 +171,62 @@ def web_server(FILE_NAME = 'temp_data.csv'):
                         conn.send("\r\n")
                         conn.send(file.read())  # Send the file content
                 except OSError:
-                    conn.send("HTTP/1.1 404 Not Found\r\n\r\nFile not found.")
+                    try:
+                        conn.send("HTTP/1.1 404 Not Found\r\n\r\nFile not found.")
+                    except:
+                        pass
             else:
-                conn.send("HTTP/1.1 200 OK\r\n")
-                conn.send("Content-Type: text/html\r\n\r\n")
-                conn.send("<html><body><h1>MicroPython Web Server</h1>")
-                conn.send("<p><a href='/download'>" + FILE_NAME + "</a></p>")
-                conn.send("</body></html>")
-
+                try:
+                    conn.send("HTTP/1.1 200 OK\r\n")
+                    conn.send("Content-Type: text/html\r\n\r\n")
+                    conn.send("<html><body><h1>MicroPython Web Server</h1>")
+                    conn.send("<p><a href='/download'>" + FILE_NAME + "</a></p>")
+                    conn.send("</body></html>")
+                except OSError:
+                    pass
             conn.close()
         server_socket.close()
-        connect_to_wifi()
+        wlan = network.WLAN(network.STA_IF)
+        while not wlan.isconnected():
+            connect_to_wifi()
 
+def sendEmail(CSV_FILE):
+    #initialize SMTP server and login
+    smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)
+    # Email details
+    sender_email = 'your_sender_email@gmail.com'
+    sender_name = 'pico email'
+    sender_app_password = 'gmail_app_password'
+    recipient_email ='your_destination_email@gmail.com'
+    email_subject ='Monthly automated ESP32C3 Temperature CSV file'
+    smtp.login(sender_email, sender_app_password)
+    smtp.to(recipient_email)
+    smtp.write("From:" + sender_name + "<"+ sender_email+">\n")
+    smtp.write("Subject:" + email_subject + "\n")
+    uuidgen = "ddb8f663-bfcd-49d6-ae3f-ade84587f9d0"
+    smtp.write("MIME-Version: 1.0\n")
+    smtp.write("Content-Type: multipart/mixed; boundary=" + uuidgen + '\n\n')
+    smtp.write("--" + uuidgen + '\n') # boundary
+    smtp.write("Content-Type: text/plain; charset=UTF-8\n")
+    smtp.write("Content-Disposition: inline\n\n")
+    t = time.localtime()
+    date = str("{:2d}/{:2d}/{:4d} {:2d}:{:02d}:{:02d}".format(t[1],t[2],t[0],t[3],t[4],t[5]))
+    smtp.write("ESP32C3 Temperature logfile is attached\n")
+    smtp.write("Present time is " + date + '\n\n')
+    smtp.write("--" + uuidgen + '\n') # boundary
+    smtp.write('Content-Type: text/csv; name=' + CSV_FILE + '\n')
+    smtp.write('Content-Disposition: attachment; filename=' + CSV_FILE + '\n\n')
+    content = ''
+    try:
+        with open(CSV_FILE, 'r') as infile:
+            content = infile.read()
+            smtp.write(content)
+            smtp.write('\n')
+            smtp.send()
+            smtp.quit()
+    except OSError:
+        pass
+    
 
 while (not connect_to_wifi()):
     time.sleep(10)
