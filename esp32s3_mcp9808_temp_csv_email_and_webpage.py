@@ -39,7 +39,6 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
     i2c = machine.I2C(sda=machine.Pin(5), scl=machine.Pin(6), freq=400000) # esp32s3 xiao
     tsensor = MCP9808.MCP9808(i2c_instance=i2c, i2c_dev_addr=0x18, fahrenheit=fahrenheit)
     t = time.localtime()
-    curr_month = t[1]
     curr_min = t[3]*60+t[4]
     missed_meas = curr_min//meas_interval + 1
     if (not file_exists(FILE_NAME)):
@@ -76,7 +75,7 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
     f = open(FILE_NAME, 'a+')
     f.write(date + "\n")
     f.close()
-    if (t[1] != curr_month):
+    if (t[2] == 1): # first day of the new month
         sendEmail(FILE_NAME)
     align_to_midnight()
 
@@ -104,7 +103,7 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
         f = open(FILE_NAME, 'a+')
         f.write(date + "\n")
         f.close()
-        if (t[1] != curr_month):
+        if (t[2] == 1): # first day of the new month
             sendEmail(FILE_NAME)
         align_to_midnight()
 
