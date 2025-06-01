@@ -52,39 +52,18 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
     time.sleep(60*wait_min) # align with expected interval boundary
     total_meas = (60 * 24)//meas_interval
     remaining_meas = total_meas - missed_meas
-    for n in range(0,remaining_meas): # this loop is for the first day
-        try:
-            temp = tsensor.get_temp()
-        except:
-            temp = tsensor.get_temp()
-        f = open(FILE_NAME, 'a+')
-        if (fahrenheit):
-            f.write("{:.0f},".format(temp))
+    first_pass = True
+    while True:
+        if (First_pass):
+            for_loop_count = remaining_meas
+            first_pass = False
         else:
-            f.write("{:.2f},".format(temp))
-        f.close()
-        # if wifi is down do one attempt to connect
-        wlan = network.WLAN(network.STA_IF)
-        if not wlan.isconnected():
-            connect_to_wifi()
-        if (n < (remaining_meas - 1)): # last iteration skip wait time as we will align to midnight
-            time.sleep(meas_interval*60)
-
-    t = time.localtime()
-    date = str("{:d}/{:d}/{:d}".format(t[1],t[2],t[0]))
-    f = open(FILE_NAME, 'a+')
-    f.write(date + "\n")
-    f.close()
-    if (t[2] == 1): # first day of the new month
-        sendEmail(FILE_NAME)
-    align_to_midnight()
-
-    while True: # this loop is for all subsequent days
-        for n in range(0,total_meas): 
+            for_loop_count = total_meas
+        for n in range(0,for_loop_count): 
             try:
                 temp = tsensor.get_temp()
             except:
-                temp = tsensor.get_temp()
+                temp = tsensor.get_temp() # allow for 1 re-try
             f = open(FILE_NAME, 'a+')
             if (fahrenheit):
                 f.write("{:.0f},".format(temp))
@@ -103,7 +82,7 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
         f = open(FILE_NAME, 'a+')
         f.write(date + "\n")
         f.close()
-        if (t[2] == 1): # first day of the new month
+        if (t[2] == 1): # first day of new month
             sendEmail(FILE_NAME)
         align_to_midnight()
 
@@ -234,5 +213,3 @@ first_thread = _thread.start_new_thread(log_temp_data_to_file, ())
 time.sleep(3) # make sure log file is created before webserver is started
 # have web_server running on other thread
 second_thread = _thread.start_new_thread(web_server, ())
-
-
