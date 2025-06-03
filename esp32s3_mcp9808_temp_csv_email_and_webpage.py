@@ -74,7 +74,7 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
             wlan = network.WLAN(network.STA_IF)
             if not wlan.isconnected():
                 connect_to_wifi()
-            if (n < (total_meas - 1)): # last iteration skip wait time as we will align to midnight
+            if (n < (for_loop_count - 1)): # last iteration skip wait time as we will align to midnight
                 time.sleep(meas_interval*60)
 
         t = time.localtime()
