@@ -88,8 +88,8 @@ def log_temp_data_to_file(FILE_NAME='temp_data.csv',meas_interval=30, fahrenheit
 
 def connect_to_wifi():
     # Your network credentials
-    ssid = 'SSID_NAME'
-    password = 'PASSWORD'
+    ssid = 'YOUR_SSID'
+    password = 'YOUR_PASSWORD'
     #Connect to Wi-Fi
     wlan = network.WLAN(network.STA_IF)
     wlan.ifconfig(('192.168.0.202', '255.255.255.0', '192.168.0.1', '205.171.3.25')) # put your static IP here
@@ -99,10 +99,10 @@ def connect_to_wifi():
     wlan.connect(ssid, password)
 
     # Wait for connection to establish
-    max_wait = 10
+    max_wait = 20
     while max_wait > 0:
         if wlan.isconnected():
-                break
+            break
         max_wait -= 1
         print('waiting for connection...')
         time.sleep(1)
@@ -111,9 +111,12 @@ def connect_to_wifi():
     if wlan.isconnected():
         print('connected')
         ntptime.timeout = 5
+        ntptime.host = 'time-d-b.nist.gov'
         try:
+            time.sleep(2)
             ntptime.settime() # this is GMT
         except:
+            time.sleep(2)
             ntptime.settime() # try again
         rtc = machine.RTC()
         utc_shift = -7 # Phoenix Arizona
@@ -172,10 +175,10 @@ def sendEmail(CSV_FILE):
     #initialize SMTP server and login
     smtp = umail.SMTP('smtp.gmail.com', 465, ssl=True)
     # Email details
-    sender_email = 'YOUR_EMAIL@gmail.com'
-    sender_name = 'app name'
-    sender_app_password = 'app_password'
-    recipient_email ='EMAIL@gmail.com'
+    sender_email = 'SENDER_EMAIL@gmail.com'
+    sender_name = 'GMAIL_APP_NAME'
+    sender_app_password = 'GOOGLE_APP_PASSWORD'
+    recipient_email ='RECIVER_EMAIL'
     email_subject ='Monthly automated PICO W Temperature CSV file'
     smtp.login(sender_email, sender_app_password)
     smtp.to(recipient_email)
@@ -212,5 +215,3 @@ core1_thread = _thread.start_new_thread(log_temp_data_to_file, ())
 time.sleep(3) # make sure log file is created before webserver is started
 # have web_server running on core0
 web_server()
-
-
